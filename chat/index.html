@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<head>
+
+</head>
+
+<body>
+    <html>
+    <div id="pagetitle">欢迎来到某不知名聊天室，<span id="userid"></span></div>
+    <button type="button" id="connect">连接聊天服务器</button>
+    <button type="button" id="disconnect">从聊天服务器断开</button>
+    <button type="button" id="readed">标记消息为已读-beta版</button>
+    <button type="button" id="history">获取历史消息</button>
+    <div>
+        <input type="text" placeholder="请输入聊天内容..." id="textarea">
+        <button type="button" id="send">发送</button>
+    </div>
+    <div id="message">
+        聊天区域
+        <br />
+    </div>
+
+    </html>
+    <script type="text/javascript" src="https://cdn.goeasy.io/goeasy-2.2.2.min.js"></script>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script>
+        var goeasy = GoEasy.getInstance({
+            host: "hangzhou.goeasy.io", //若是新加坡区域：singapore.goeasy.io
+            appkey: "BC-f0ed0595dbd74b398fdfcac61b1f18d6",
+            modules: ['im'] //根据需要，传入‘pubsub’或'im’，或数组方式同时传入
+        });
+        // jquery - 与服务器建立连接
+        $("button#connect").click(function () {
+            console.log("connect")
+            goeasy.connect({
+                id: "001", //pubsub选填，im必填
+                data: {
+                    "avatar": "/www/xxx.png",
+                    "nickname": "Test01"
+                }, //必须是一个对象，pubsub选填，im必填，用于上下线提醒和查询在线用户列表时，扩展更多的属性
+                onSuccess: function () { //连接成功
+                    console.log("GoEasy connect successfully.") //连接成功
+                },
+                onFailed: function (error) { //连接失败
+                    console.log("Failed to connect GoEasy, code:" + error.code + ",error:" + error
+                        .content);
+                },
+                onProgress: function (attempts) { //连接或自动重连中
+                    console.log("GoEasy is connecting", attempts);
+                }
+            });
+            $("#userid").text("已登录");
+        })
+        // jquery - 与服务器断开连接
+        $("button#disconnect").click(function () {
+            console.log("disconnect")
+            goeasy.disconnect({
+                onSuccess: function () {
+                    console.log("GoEasy disconnect successfully.") //断开服务器连接
+                },
+                onFailed: function (error) {
+                    console.log("Failed to disconnect GoEasy, code:" + error.code + ",error:" +
+                        error.content); // 如果保存出错的话也得输出错误码
+                }
+            });
+        })
+        // jquery - 发送消息与接收消息
+        var im = goeasy.im;
+        $("button#send").click(function () {
+            //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
+            let textMessage = im.createTextMessage({
+                text: $("#textarea").val(), //消息内容
+                to: {
+                    type: GoEasy.IM_SCENE.PRIVATE, //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                    id: 'user002',
+                    data: {
+                        "avatar": "/www/xxx.png",
+                        "nickname": "Neo"
+                    } //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                }
+            });
+
+            //发送消息
+            im.sendMessage({
+                message: textMessage,
+                onSuccess: function (message) { //发送成功
+                    console.log("Private message sent successfully.", message);
+                },
+                onFailed: function (error) { //发送失败
+                    console.log('Failed to send private message，code:' + error.code + ' ,error ' +
+                        error
+                        .content);
+                }
+            });
+        })
+
+        // 时间戳转化
+        function add0(m) {
+            return m < 10 ? '0' + m : m
+        }
+
+        function format(shijianchuo) {
+            //shijianchuo是整数，否则要parseInt转换
+            var time = new Date(shijianchuo);
+            var y = time.getFullYear();
+            var m = time.getMonth() + 1;
+            var d = time.getDate();
+            var h = time.getHours();
+            var mm = time.getMinutes();
+            var s = time.getSeconds();
+            return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+        }
+
+        // 接收消息
+        var onPrivateMessageReceived = function (message) {
+            console.log("received private message:" + JSON.stringify(message));
+            var data = $.parseJSON(JSON.stringify(message));
+            $("#message").append("<div>" + data.senderId + "</div>");
+            $("#message").append("<div>" + format(data.timestamp) + "</div>");
+            $("#message").append("<div>" + data.payload.text + "</div>" + "<br/>");
+        };
+
+        //监听和接收单聊消息
+        im.on(GoEasy.IM_EVENT.PRIVATE_MESSAGE_RECEIVED, onPrivateMessageReceived);
+
+        $("button#readed").click(function () {
+            im.markPrivateMessageAsRead({
+                userId: 'user002', //聊天对象的userId
+                onSuccess: function () { //标记成功
+                    console.log("Marked as read successfully.")
+                },
+                onFailed: function (error) { //标记失败
+                    console.log("Failed to mark as read, code:" + error.code + " content:" + error
+                        .content);
+                }
+            });
+        })
+
+        $("button#history").click(function () {
+            im.history({
+                userId: "user002", //对方userId
+                lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
+                limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
+                onSuccess: function (result) {
+                    console.log("Query history successfully, result:\n " + JSON.stringify(result));
+                    var data = $.parseJSON(JSON.stringify(result));
+                    var content = data.content;
+                    $.each(content, function (n, item) {
+                        $("#message").append("<div>" + item.senderId + " " + format(item
+                            .timestamp) + "</div>")
+                        $("#message").append("<div>" + item.payload.text + "</div>" +
+                            "<br/>");
+                    })
+                },
+                onFailed: function (error) { //获取失败
+                    console.log("Failed to query private message, code:" + error.code +
+                        " content:" + error
+                        .content);
+                },
+            });
+        })
+    </script>
+</body>
