@@ -23,7 +23,7 @@
                         <i class="fas fa-lock"></i>
                         <input type="password" placeholder="密码" />
                     </div>
-                    <input type="submit" value="登录" class="btn solid" />
+                    <input type="submit" value="登录" class="btn solid" id="real-sign-in" />
                     <p class="social-text">其他社交账号登录</p>
                     <div class="social-media">
                         <a href="#" class="social-icon">
@@ -44,17 +44,17 @@
                     <h2 class="title">注册</h2>
                     <div class="input-field">
                         <i class="fas fa-user"></i>
-                        <input type="text" placeholder="用户名" />
+                        <input type="text" placeholder="用户名" id="register-username" />
                     </div>
                     <div class="input-field">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" placeholder="电子邮件" />
+                        <input type="email" placeholder="电子邮件" id="register-email" />
                     </div>
                     <div class="input-field">
                         <i class="fas fa-lock"></i>
-                        <input type="password" placeholder="密码" />
+                        <input type="password" placeholder="密码" id="register-password" />
                     </div>
-                    <input type="submit" class="btn" value="注册" />
+                    <input type="submit" class="btn" value="注册" id="real-sign-up" />
                     <p class="social-text">其他社交平台注册</p>
                     <div class="social-media">
                         <a href="#" class="social-icon">
@@ -103,6 +103,32 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="jquery.js"></script>
+    <script>
+        $("#real-sign-in").click(function () {
+            console.log("你正在点击登录按钮")
+            $(location).attr('href', 'www.baidu.com');
+        })
+        $("#real-sign-up").click(function () {
+            $.ajax({
+                url: "http://localhost:8080/api/v1/user/register",
+                type: "POST",
+                contentType: "application/json;charset=UTF-8",
+                data: JSON.stringify({ "userName": $("#register-username").val(), "userPassword": $("#register-password").val(), "userEmail": $("#register-email").val() }),
+                success: function (status) {
+                    if (status == "注册成功") {
+                        alert("注册成功");
+                        $("#register-username").val("");
+                        $("#register-password").val("");
+                        $("#register-email").val("");
+                    }
+                },
+                error: function (status) {
+                    console.log(status)
+                }
+            })
+        })
+    </script>
 </body>
 
 </html>
