@@ -33,7 +33,7 @@
         $("button#connect").click(function () {
             console.log("connect")
             goeasy.connect({
-                id: "001", //pubsub选填，im必填
+                id: "1", //pubsub选填，im必填
                 data: {
                     "avatar": "/www/xxx.png",
                     "nickname": "Test01"
@@ -72,7 +72,7 @@
                 text: $("#textarea").val(), //消息内容
                 to: {
                     type: GoEasy.IM_SCENE.PRIVATE, //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
-                    id: 'user002',
+                    id: '2',
                     data: {
                         "avatar": "/www/xxx.png",
                         "nickname": "Neo"
@@ -89,7 +89,7 @@
                 onFailed: function (error) { //发送失败
                     console.log('Failed to send private message，code:' + error.code + ' ,error ' +
                         error
-                        .content);
+                            .content);
                 }
             });
         })
@@ -125,7 +125,7 @@
 
         $("button#readed").click(function () {
             im.markPrivateMessageAsRead({
-                userId: 'user002', //聊天对象的userId
+                userId: '2', //聊天对象的userId
                 onSuccess: function () { //标记成功
                     console.log("Marked as read successfully.")
                 },
@@ -138,7 +138,7 @@
 
         $("button#history").click(function () {
             im.history({
-                userId: "user002", //对方userId
+                userId: "2", //对方userId
                 lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
                 limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
                 onSuccess: function (result) {
@@ -155,7 +155,7 @@
                 onFailed: function (error) { //获取失败
                     console.log("Failed to query private message, code:" + error.code +
                         " content:" + error
-                        .content);
+                            .content);
                 },
             });
         })
