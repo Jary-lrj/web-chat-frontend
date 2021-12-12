@@ -115,7 +115,7 @@
                 type: "GET",
                 contentType: "application/json;charset=UTF-8",
                 success: function (status) {
-                    if (status != "登录失败") {
+                    if (status !== "登录失败") {
                         localStorage.setItem("chattoken", status);
                         localStorage.setItem("userId", $("#login-id").val());
                         console.log("登录成功")
@@ -137,7 +137,7 @@
                 contentType: "application/json;charset=UTF-8",
                 data: JSON.stringify({ "userName": $("#register-username").val(), "userPassword": $("#register-password").val(), "userEmail": $("#register-email").val() }),
                 success: function (status) {
-                    if (status == "注册成功") {
+                    if (status === "注册成功") {
                         alert("注册成功");
                         $("#register-username").val("");
                         $("#register-password").val("");
