@@ -313,11 +313,13 @@
             </div>
             <!-- chat body -->
             <!-- chat footer -->
+            <!--            放个iframe用来接收刷新操作，这样就不用刷新了-->
             <div class="chat-footer">
-                <form action="#">
+                <form action="#" target="iframe">
                     <input type="text" placeholder="请在这里输入您的消息..." id="user-message">
                     <button id="send-message"><img src="images/send.png" alt="send"></button>
                 </form>
+                <iframe id="iframe" name="iframe" style="display:none;"></iframe>
             </div>
             <!-- chat footer -->
         </div>
@@ -446,6 +448,16 @@
                 console.log("GoEasy is connecting", attempts);
             }
         });
+
+        im.removePrivateConversation({
+            userId: "1",
+            onSuccess: function () {
+                console.log("Remove private conversation successfully.");
+            },
+            onFailed: function (error) {
+                console.log("Failed to remove private conversation, code:" + error.code + " content:" + error.content);
+            }
+        });
     })
     // 退出聊天服务器
     $("#log-out").click(function () {
@@ -534,7 +546,7 @@
                         const string = "<li class='chat-list-item' id='friend-item'>" +
                             "<figure class='avatar user-online'>" +
                             "<img src='images/user-2.png' alt='image'>" + "</figure>" + "<div class='list-body'>" + "<div class='chat-bttn'>"
-                            + "<h3 class='mb-1 mt-1' id='friend-name' >" + item.friendName + "</h3 >" + "<p id='friend-motto'>" + item.friendMotto + "</p>" + "</div >" + "</div >" + "</li > ";
+                            + "<h3 class='mb-1 mt-1' id='friend-name' >" + item.friendName + "(" + "<span id='friend-id'>" + item.friendId + "</span>" + ")" + "</h3 >" + "<p id='friend-motto'>" + item.friendMotto + "</p>" + "</div >" + "</div >" + "</li > ";
                         $("#friend-list-area").append(string)
                         ifFriendListExists = true;
                     })
@@ -550,28 +562,87 @@
     $("#user-chat-list").on("click", "#chat-item", function () {
         var userInfo;
         // 请求调整聊天窗口对应的数据
+        const talkToId = $(this).find("#chat-item-userid")[0].innerHTML;
         $.ajax({
             headers: {
                 chattoken: localStorage.getItem("chattoken")
             },
-            url: requestUrl + "/" + $("#chat-item-userid")[0].innerHTML,
+            url: requestUrl + "/" + talkToId,
             type: "GET",
             success: function (data) {
-                $("#chatting-user").text($("#chat-item-userid")[0].innerHTML);
+                $("#chatting-user").text(talkToId);
                 $("#chatting-status").text(data.userMotto);
+                // 每次请求历史记录前都把消息记录整个清理一遍？
+                $("#messages-list").html("");
+                im.history({
+                    userId: talkToId,  //对方userId
+                    lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
+                    // 对消息条数不做限制
+                    onSuccess: function (result) {
+                        $.each(result.content, function (index, item) {
+                            if (item.senderId == $("#chat-item-userid")[0].innerHTML) {
+                                const string = "                            <div\n" +
+                                    "                        class = \"message-item\" >\n" +
+                                    "                            <div\n" +
+                                    "                        class = \"message-user\" >\n" +
+                                    "                            <figure\n" +
+                                    "                        class = \"avatar\" >\n" +
+                                    "                            <img\n" +
+                                    "                        src = \"images/user-9.png\"\n" +
+                                    "                        alt = \"image\"\n" +
+                                    "                        id = \"chat-message-avatar\" >\n" +
+                                    "                            </figure>\n" +
+                                    "                        <div>\n" +
+                                    "                            <h5 id=\"chat-message-sender\">" + item.senderId + "</h5>\n" +
+                                    "                            <div class=\"time\" id=\"chat-message-time\">" + format(item.timestamp) + "</div>\n" +
+                                    "                        </div>\n" +
+                                    "                    </div>\n" +
+                                    "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.text + "</div>\n" +
+                                    "                    </div>"
+                                $("#messages-list").append(string);
+                            } else {
+                                const string = "                            <div class=\"message-item outgoing-message\">\n" +
+                                    "                                <div class=\"message-user\">\n" +
+                                    "                                    <figure class=\"avatar\">\n" +
+                                    "                                        <img src=\"images/user-1.png\" alt=\"image\">\n" +
+                                    "                                    </figure>\n" +
+                                    "                                    <div>\n" +
+                                    "                                        <h5>" + item.senderId + "</h5>\n" +
+                                    "                                        <div class=\"time\">" + format(item.timestamp) + "<i class=\"ti-double-check text-info\"></i></div>\n" +
+                                    "                                    </div>\n" +
+                                    "                                </div>\n" +
+                                    "                                <div class=\"message-wrap\">" + item.payload.text +
+                                    "                                </div>\n" +
+                                    "                            </div>"
+                                $("#messages-list").append(string);
+                            }
+                        })
+                    },
+                    onFailed: function (error) { //获取失败
+                        console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+                    },
+                });
             },
             error: function (data) {
                 console.log(data);
             }
         })
+    })
 
+    $("#friend-list-area").on("click", "#friend-item", function () {
+        $("#chatting-user").text($(this).find("#friend-id")[0].innerHTML);
+        $("#chatting-status").text($(this).find("#friend-motto")[0].innerHTML);
+        $("#messages-list").html("");
+        console.log($(this).find("#friend-id")[0].innerHTML)
+        const checkUser = $(this).find("#friend-id")[0].innerHTML;
+        $("messages-list").text("")
         im.history({
-            userId: $("#chat-item-userid")[0].innerHTML,  //对方userId
+            userId: $(this).find("#friend-id")[0].innerHTML,  //对方userId
             lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
             // 对消息条数不做限制
             onSuccess: function (result) {
                 $.each(result.content, function (index, item) {
-                    if (item.senderId == $("#chat-item-userid")[0].innerHTML) {
+                    if (item.senderId == checkUser) {
                         const string = "                            <div\n" +
                             "                        class = \"message-item\" >\n" +
                             "                            <div\n" +
@@ -590,7 +661,7 @@
                             "                    </div>\n" +
                             "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.text + "</div>\n" +
                             "                    </div>"
-                        $("#messages-list").append(string);
+                        $("#messages-list").append(string)
                     } else {
                         const string = "                            <div class=\"message-item outgoing-message\">\n" +
                             "                                <div class=\"message-user\">\n" +
@@ -605,87 +676,44 @@
                             "                                <div class=\"message-wrap\">" + item.payload.text +
                             "                                </div>\n" +
                             "                            </div>"
-                        $("#messages-list").append(string);
+                        $("#messages-list").append(string)
                     }
                 })
             },
             onFailed: function (error) { //获取失败
-                console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+                console.log(error);
             },
         });
-        // 发送消息
-        $("#send-message").click(function () {
-            //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
-            let textMessage = im.createTextMessage({
-                text: $("#user-message").val(), //消息内容
-                to: {
-                    type: GoEasy.IM_SCENE.PRIVATE, //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
-                    id: $("#chat-item-userid")[0].innerHTML,
-                    data: {
-                        "avatar": "/www/xxx.png",
-                        "nickname": "Neo"
-                    } //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
-                }
-            });
-            //发送消息
-            im.sendMessage({
-                message: textMessage,
-                onSuccess: function (message) { //发送成功
-                    const string = "                            <div\n" +
-                        "                        class = \"message-item outgoing-message\" >\n" +
-                        "                            <div\n" +
-                        "                        class = \"message-user\" >\n" +
-                        "                            <figure\n" +
-                        "                        class = \"avatar\" >\n" +
-                        "                            <img\n" +
-                        "                        src = \"images/user-9.png\"\n" +
-                        "                        alt = \"image\"\n" +
-                        "                        id = \"chat-message-avatar\" >\n" +
-                        "                            </figure>\n" +
-                        "                        <div>\n" +
-                        "                            <h5 id=\"chat-message-sender\">" + message.senderId + "</h5>\n" +
-                        "                            <div class=\"time\" id=\"chat-message-time\">" + format(message.timestamp) + "</div>\n" +
-                        "                        </div>\n" +
-                        "                    </div>\n" +
-                        "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + message.payload.text + "</div>\n" +
-                        "                    </div>"
-                    $("#messages-list").append(string);
-                },
-                onFailed: function (error) { //发送失败
-                    console.log('Failed to send private message，code:' + error.code + ' ,error ' + error.content);
-                }
-            });
-        })
-        var onPrivateMessageReceived = function (message) {
-            console.log("received private message:" + JSON.stringify(message));
-            const string = "                            <div\n" +
-                "                        class = \"message-item\" >\n" +
-                "                            <div\n" +
-                "                        class = \"message-user\" >\n" +
-                "                            <figure\n" +
-                "                        class = \"avatar\" >\n" +
-                "                            <img\n" +
-                "                        src = \"images/user-9.png\"\n" +
-                "                        alt = \"image\"\n" +
-                "                        id = \"chat-message-avatar\" >\n" +
-                "                            </figure>\n" +
-                "                        <div>\n" +
-                "                            <h5 id=\"chat-message-sender\">" + message.senderId + "</h5>\n" +
-                "                            <div class=\"time\" id=\"chat-message-time\">" + format(message.timestamp) + "</div>\n" +
-                "                        </div>\n" +
-                "                    </div>\n" +
-                "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + message.payload.text + "</div>\n" +
-                "                    </div>"
-            $("#messages-list").append(string);
-        };
-        //监听和接收单聊消息
-        im.on(GoEasy.IM_EVENT.PRIVATE_MESSAGE_RECEIVED, onPrivateMessageReceived);
     })
 
-    // 根据好友列表发起聊天
-    $("#friend-list-area").on("click", "#friend-item", function (data) {
-        console.log($("#friend-motto")[0].innerHTML);
+    $("#send-message").click(function () {
+        //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
+        let textMessage = im.createTextMessage({
+            text: $("#user-message").val(), //消息内容
+            to: {
+                type: GoEasy.IM_SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                id: $("#chatting-user").text(),
+                data: {"avatar": "/www/xxx.png", "nickname": "Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+            }
+        });
+
+        //发送消息
+        im.sendMessage({
+            message: textMessage,
+            onSuccess: function (message) { //发送成功
+                console.log("Private message sent successfully.", message);
+            },
+            onFailed: function (error) { //发送失败
+                console.log('Failed to send private message，code:' + error.code + ' ,error ' + error.content);
+            }
+        });
     })
+    var onPrivateMessageReceived = function (message) {
+        console.log("received private message:" + JSON.stringify(message));
+    };
+    //监听和接收单聊消息
+    im.on(GoEasy.IM_EVENT.PRIVATE_MESSAGE_RECEIVED, onPrivateMessageReceived);
+
 
 </script>
 
