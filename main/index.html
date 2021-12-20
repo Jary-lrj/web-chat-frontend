@@ -285,12 +285,15 @@
                     <ul class="list-inline mb-0 mt-2">
                         <li class="list-inline-item not-mobile"><a href="#" class="bttn-box-round"><i
                                 class="ti-microphone"></i></a></li>
-                        <li class="list-inline-item not-mobile"><a href="#" class="bttn-box-round"
-                                                                   id="videocall-bttn"><i
-                                class="ti-video-camera"></i></a></li>
-                        <li class="list-inline-item d-xl-none d-lg-none"><a href="#"
-                                                                            class="bttn-box-round back-chat-div"><i
-                                class="ti-arrow-left"></i></a></li>
+                        <!--                        TODO:在这里安装文件上传功能-->
+                        <li class="list-inline-item not-mobile">
+                            <a href="#" class="bttn-box-round"
+                               id="file-upload-bttn"><i
+                                    class="ti-video-camera"></i></a>
+                        </li>
+
+                        <li class="list-inline-item not-mobile"><input type="file" id="upload-file-choose"></li>
+
                         <li class="list-inline-item">
                             <a href="#" class="bttn-box-round" data-toggle="dropdown"><i
                                     class="ti-more-alt"></i></a>
@@ -581,39 +584,79 @@
                     onSuccess: function (result) {
                         $.each(result.content, function (index, item) {
                             if (item.senderId == $("#chat-item-userid")[0].innerHTML) {
-                                const string = "                            <div\n" +
-                                    "                        class = \"message-item\" >\n" +
-                                    "                            <div\n" +
-                                    "                        class = \"message-user\" >\n" +
-                                    "                            <figure\n" +
-                                    "                        class = \"avatar\" >\n" +
-                                    "                            <img\n" +
-                                    "                        src = \"images/user-9.png\"\n" +
-                                    "                        alt = \"image\"\n" +
-                                    "                        id = \"chat-message-avatar\" >\n" +
-                                    "                            </figure>\n" +
-                                    "                        <div>\n" +
-                                    "                            <h5 id=\"chat-message-sender\">" + item.senderId + "</h5>\n" +
-                                    "                            <div class=\"time\" id=\"chat-message-time\">" + format(item.timestamp) + "</div>\n" +
-                                    "                        </div>\n" +
-                                    "                    </div>\n" +
-                                    "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.text + "</div>\n" +
-                                    "                    </div>"
+                                var string;
+                                if (item.type !== "file") {
+                                    string = "                            <div\n" +
+                                        "                        class = \"message-item\" >\n" +
+                                        "                            <div\n" +
+                                        "                        class = \"message-user\" >\n" +
+                                        "                            <figure\n" +
+                                        "                        class = \"avatar\" >\n" +
+                                        "                            <img\n" +
+                                        "                        src = \"images/user-9.png\"\n" +
+                                        "                        alt = \"image\"\n" +
+                                        "                        id = \"chat-message-avatar\" >\n" +
+                                        "                            </figure>\n" +
+                                        "                        <div>\n" +
+                                        "                            <h5 id=\"chat-message-sender\">" + item.senderId + "</h5>\n" +
+                                        "                            <div class=\"time\" id=\"chat-message-time\">" + format(item.timestamp) + "</div>\n" +
+                                        "                        </div>\n" +
+                                        "                    </div>\n" +
+                                        "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.text + "</div>\n" +
+                                        "                    </div>"
+                                } else {
+                                    string = "                            <div\n" +
+                                        "                        class = \"message-item\" >\n" +
+                                        "                            <div\n" +
+                                        "                        class = \"message-user\" >\n" +
+                                        "                            <figure\n" +
+                                        "                        class = \"avatar\" >\n" +
+                                        "                            <img\n" +
+                                        "                        src = \"images/user-9.png\"\n" +
+                                        "                        alt = \"image\"\n" +
+                                        "                        id = \"chat-message-avatar\" >\n" +
+                                        "                            </figure>\n" +
+                                        "                        <div>\n" +
+                                        "                            <h5 id=\"chat-message-sender\">" + item.senderId + "</h5>\n" +
+                                        "                            <div class=\"time\" id=\"chat-message-time\">" + format(item.timestamp) + "</div>\n" +
+                                        "                        </div>\n" +
+                                        "                    </div>\n" +
+                                        "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.url + "</div>\n" +
+                                        "                    </div>"
+                                }
                                 $("#messages-list").append(string);
                             } else {
-                                const string = "                            <div class=\"message-item outgoing-message\">\n" +
-                                    "                                <div class=\"message-user\">\n" +
-                                    "                                    <figure class=\"avatar\">\n" +
-                                    "                                        <img src=\"images/user-1.png\" alt=\"image\">\n" +
-                                    "                                    </figure>\n" +
-                                    "                                    <div>\n" +
-                                    "                                        <h5>" + item.senderId + "</h5>\n" +
-                                    "                                        <div class=\"time\">" + format(item.timestamp) + "<i class=\"ti-double-check text-info\"></i></div>\n" +
-                                    "                                    </div>\n" +
-                                    "                                </div>\n" +
-                                    "                                <div class=\"message-wrap\">" + item.payload.text +
-                                    "                                </div>\n" +
-                                    "                            </div>"
+                                var string;
+                                if (item.type !== "file") {
+                                    string = "                            <div class=\"message-item outgoing-message\">\n" +
+                                        "                                <div class=\"message-user\">\n" +
+                                        "                                    <figure class=\"avatar\">\n" +
+                                        "                                        <img src=\"images/user-1.png\" alt=\"image\">\n" +
+                                        "                                    </figure>\n" +
+                                        "                                    <div>\n" +
+                                        "                                        <h5>" + item.senderId + "</h5>\n" +
+                                        "                                        <div class=\"time\">" + format(item.timestamp) + "<i class=\"ti-double-check text-info\"></i></div>\n" +
+                                        "                                    </div>\n" +
+                                        "                                </div>\n" +
+                                        "                                <div class=\"message-wrap\">" + item.payload.text +
+                                        "                                </div>\n" +
+                                        "                            </div>"
+
+                                } else {
+                                    string = "                            <div class=\"message-item outgoing-message\">\n" +
+                                        "                                <div class=\"message-user\">\n" +
+                                        "                                    <figure class=\"avatar\">\n" +
+                                        "                                        <img src=\"images/user-1.png\" alt=\"image\">\n" +
+                                        "                                    </figure>\n" +
+                                        "                                    <div>\n" +
+                                        "                                        <h5>" + item.senderId + "</h5>\n" +
+                                        "                                        <div class=\"time\">" + format(item.timestamp) + "<i class=\"ti-double-check text-info\"></i></div>\n" +
+                                        "                                    </div>\n" +
+                                        "                                </div>\n" +
+                                        "                                <div class=\"message-wrap\">" + item.payload.url +
+                                        "                                </div>\n" +
+                                        "                            </div>"
+                                }
                                 $("#messages-list").append(string);
                             }
                         })
@@ -708,6 +751,7 @@
             }
         });
     })
+
     var onPrivateMessageReceived = function (message) {
         console.log("received private message:" + JSON.stringify(message));
     };
@@ -718,7 +762,31 @@
 
 
     // 文件上传模块
-    //TODO:Nginx的文件服务器已经配好了，然后具体怎么上传文件还需要在前端放个按钮
+    //TODO:用阿里云OSS去了，已经在goeasy里配好了，现在需要写一个文件上传按钮，然后把对应的函数放进去就可以了
+    $("#file-upload-bttn").click(function () {
+        const uploadFileMessage = im.createFileMessage(
+            {
+                file: document.getElementById('upload-file-choose').files[0], //Html获得file对象
+                to: {
+                    type: GoEasy.IM_SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                    id: $("#chatting-user").text(),
+                    data: {"avatar": "/www/xxx.png", "nickname": "Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                },
+                onProgress: function (event) {
+                    console.log('file uploading:', event)
+                }//获取上传进度
+            }
+        )
+        im.sendMessage({
+            message: uploadFileMessage,
+            onSuccess: function (message) {  //发送成功
+                console.log('Message sent successfully.', message);
+            },
+            onFailed: function (error) { //发送失败
+                console.log('Failed to send message，code:' + error.code + ',error' + error.content);
+            }
+        });
+    })
 
 </script>
 
