@@ -118,6 +118,7 @@
                 if (status.chattoken !== "登录失败") {
                     localStorage.setItem("chattoken", status.chattoken);
                     localStorage.setItem("userName", status.userName);
+                    localStorage.setItem("userPassword", $("#login-password").val());
                     localStorage.setItem("userId", $("#login-id").val());
                     console.log("登录成功")
                     window.location.href = "../main/index.html";
