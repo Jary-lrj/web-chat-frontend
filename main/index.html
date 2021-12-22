@@ -115,6 +115,8 @@
                                                                                    alt="logo"></a></li>
                     <li><a href="#" class="active nav-content-bttn" data-tab="chats" id="chat-list"><span
                             class="circle-icon bg-warning"></span><i class="ti-comments"></i></a></li>
+                    <li><a href="#" class="active nav-content-bttn" data-tab="group-chat" id="group-chat-list"><span
+                            class="circle-icon bg-success"></span><i class="ti-comments"></i></a></li>
                     <li><a href="#" class="nav-content-bttn" data-tab="friends" id="friend-list"><span
                             class="circle-icon bg-danger"></span><i class="ti-user"></i></a></li>
                     <li class="d-none d-xl-block d-lg-block night-mode"><a href="#"><i
@@ -203,6 +205,25 @@
                     </ul>
                 </div>
             </div>
+
+            <div class="sidebar" id="group-chat">
+                <div class="text-left mb-1 mt-0">
+                    <h2 class="title-text"><b>群聊</b> 群聊列表</h2>
+                </div>
+                <div class="form-content">
+                    <form action="#" class="mb-3 mt-3">
+                        <label>
+                            <input type="text" class="form-control" placeholder="搜索最近群聊">
+                        </label>
+                    </form>
+                </div>
+                <div class="chat-list-content">
+                    <ul class="chat-list" id="group-chatting-list">
+
+                    </ul>
+                </div>
+            </div>
+
             <div class="sidebar" id="settings">
                 <div class="text-left mb-2 mt-3">
                     <h2 class="title-text"><b>账户</b> 设置您的账户 </h2>
@@ -223,15 +244,18 @@
                                 <div class="panel-body">
                                     <form action="#" class="mb-3 mt-3">
                                         <label>
-                                            <input type="text" class="form-control mb-3" placeholder="用户名">
+                                            <input type="text" class="form-control mb-3" placeholder="用户名"
+                                                   id="newUserName">
                                         </label>
                                         <label>
-                                            <input type="text" class="form-control mb-3" placeholder="邮箱">
+                                            <input type="text" class="form-control mb-3" placeholder="邮箱"
+                                                   id="newUserEmail">
                                         </label>
                                         <label>
-                                            <input type="text" class="form-control mb-3" placeholder="个性签名">
+                                            <input type="text" class="form-control mb-3" placeholder="个性签名"
+                                                   id="newUserMotto">
                                         </label>
-                                        <button>保存</button>
+                                        <button id="saveNewUserInfo">保存</button>
                                     </form>
                                 </div>
                             </div>
@@ -258,7 +282,7 @@
                                         <label>
                                             <input type="text" class="form-control mb-3" placeholder="重置密码">
                                         </label>
-                                        <button>提交</button>
+                                        <button id="">提交</button>
                                     </form>
                                 </div>
                             </div>
@@ -283,27 +307,13 @@
                 </div>
                 <div class="chat-header-action">
                     <ul class="list-inline mb-0 mt-2">
-                        <li class="list-inline-item not-mobile"><a href="#" class="bttn-box-round"><i
-                                class="ti-microphone"></i></a></li>
                         <!--                        TODO:在这里安装文件上传功能-->
                         <li class="list-inline-item not-mobile">
                             <a href="#" class="bttn-box-round"
                                id="file-upload-bttn"><i
                                     class="ti-video-camera"></i></a>
                         </li>
-
                         <li class="list-inline-item not-mobile"><input type="file" id="upload-file-choose"></li>
-
-                        <li class="list-inline-item">
-                            <a href="#" class="bttn-box-round" data-toggle="dropdown"><i
-                                    class="ti-more-alt"></i></a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a href="#" class="dropdown-item profile-detail-bttn">用户资料</a>
-                                <a href="#" class="dropdown-item">特别关心？</a>
-                                <div class="dropdown-divider"></div>
-                                <a href="#" class="dropdown-item text-danger">屏蔽该用户</a>
-                            </div>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -730,26 +740,47 @@
     })
 
     $("#send-message").click(function () {
-        //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
-        let textMessage = im.createTextMessage({
-            text: $("#user-message").val(), //消息内容
-            to: {
-                type: GoEasy.IM_SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
-                id: $("#chatting-user").text(),
-                data: {"avatar": "/www/xxx.png", "nickname": "Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
-            }
-        });
 
-        //发送消息
-        im.sendMessage({
-            message: textMessage,
-            onSuccess: function (message) { //发送成功
-                console.log("Private message sent successfully.", message);
-            },
-            onFailed: function (error) { //发送失败
-                console.log('Failed to send private message，code:' + error.code + ' ,error ' + error.content);
-            }
-        });
+        //发送消息，群聊和私聊是有条件的
+        if ($("#chatting-user").text() !== "" && $("#chatting-user").text() !== "fw联盟") {
+            //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
+            let textMessage = im.createTextMessage({
+                text: $("#user-message").val(), //消息内容
+                to: {
+                    type: GoEasy.IM_SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                    id: $("#chatting-user").text(),
+                    data: {"avatar": "/www/xxx.png", "nickname": "Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                }
+            });
+            im.sendMessage({
+                message: textMessage,
+                onSuccess: function (message) { //发送成功
+                    console.log("Private message sent successfully.", message);
+                },
+                onFailed: function (error) { //发送失败
+                    console.log('Failed to send private message，code:' + error.code + ' ,error ' + error.content);
+                }
+            });
+        } else if ($("#chatting-user").text() !== "" && $("#chatting-user").text() === "fw联盟") {
+            var textMessage = im.createTextMessage({
+                text: $("#user-message").val(), //消息内容
+                to: {
+                    type: GoEasy.IM_SCENE.GROUP,   //群聊
+                    id: 'fw联盟',  //群id
+                    data: {"avatar": "/www/xxx.png", "nickname": "fw联盟"} //群信息, 任意格式的字符串或者对象，用于更新会话列表中的群信息conversation.data
+                }
+            });
+            //发送消息
+            im.sendMessage({
+                message: textMessage,
+                onSuccess: function (message) {  //发送成功
+                    console.log("Group message sent successfully.", message);
+                },
+                onFailed: function (error) { //发送失败
+                    console.log("Failed to send group message, code:" + error.code + ",error:" + error.content);
+                }
+            });
+        }
     })
 
     var onPrivateMessageReceived = function (message) {
@@ -758,8 +789,104 @@
     //监听和接收单聊消息
     im.on(GoEasy.IM_EVENT.PRIVATE_MESSAGE_RECEIVED, onPrivateMessageReceived);
 
-    // 群聊模块
+    var onGroupMessageReceived = function (message) {
+        console.log("received group message:" + JSON.stringify(message));
+    };
+    //接收群消息
+    im.on(GoEasy.IM_EVENT.GROUP_MESSAGE_RECEIVED, onGroupMessageReceived);
 
+    // 群聊模块
+    //TODO:群聊最关键的是人和人的消息发送必须要清楚
+    var theOnlyGroup = false;
+    $("#group-chat-list").click(function () {
+        console.log("1");
+        if (theOnlyGroup === false) {
+            const theGroup = "                        <li class=\"chat-list-item\" id='group-chat-item'>\n" +
+                "                            <figure class=\"avatar user-online\">\n" +
+                "                                <img src=\"images/user-2.png\" alt=\"image\">\n" +
+                "                            </figure>\n" +
+                "                            <div class=\"list-body\">\n" +
+                "                                <div class=\"chat-bttn\">\n" +
+                "                                    <h3 class=\"mb-0 mt-2\" id='group-chat-groupid'>" + "fw联盟" + "</h3>" +
+                "                                </div>\n" +
+                "                                <div class=\"list-action mt-2 text-right\">\n" +
+                "                                    <small class=\"text-primary\"> </small>\n" +
+                "                                </div>\n" +
+                "                            </div>\n" +
+                "                        </li>"
+            theOnlyGroup = true;
+            $("#group-chatting-list").append(theGroup)
+        }
+
+        //订阅群消息
+        var groupIds = ["fw联盟"];
+        im.subscribeGroup({
+            groupIds: groupIds,
+            onSuccess: function () {  //订阅成功
+                console.log("Group message subscribe successfully.");
+            },
+            onFailed: function (error) { //订阅失败
+                console.log("Failed to subscribe group message, code:" + error.code + " content:" + error.content);
+            }
+        });
+    })
+    // 群聊的消息窗口更新
+    $("#group-chatting-list").on("click", "#group-chat-item", function () {
+        console.log($("#group-chat-groupid").text());
+        $("#chatting-user").text($("#group-chat-groupid").text());
+        $("#chatting-status").text($("#group-chat-groupid").text());
+        $("#messages-list").html("");
+        im.history({
+            groupId: "fw联盟", //groupId
+            lastTimestamp: Date.now(),  //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
+            limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
+            onSuccess: function (result) {
+                $.each(result.content, function (index, item) {
+                    if (item.senderId !== localStorage.getItem("userId")) {
+                        const messageBubble = "                            <div\n" +
+                            "                        class = \"message-item\" >\n" +
+                            "                            <div\n" +
+                            "                        class = \"message-user\" >\n" +
+                            "                            <figure\n" +
+                            "                        class = \"avatar\" >\n" +
+                            "                            <img\n" +
+                            "                        src = \"images/user-9.png\"\n" +
+                            "                        alt = \"image\"\n" +
+                            "                        id = \"chat-message-avatar\" >\n" +
+                            "                            </figure>\n" +
+                            "                        <div>\n" +
+                            "                            <h5 id=\"chat-message-sender\">" + item.senderId + "</h5>\n" +
+                            "                            <div class=\"time\" id=\"chat-message-time\">" + format(item.timestamp) + "</div>\n" +
+                            "                        </div>\n" +
+                            "                    </div>\n" +
+                            "                        <div class=\"message-wrap\" id=\"chat-message-body\">" + item.payload.text + "</div>\n" +
+                            "                    </div>"
+                        $("#messages-list").append(messageBubble)
+                    } else {
+                        const messageBubble = string = " <div class=\"message-item outgoing-message\">\n" +
+                            "                                <div class=\"message-user\">\n" +
+                            "                                    <figure class=\"avatar\">\n" +
+                            "                                        <img src=\"images/user-1.png\" alt=\"image\">\n" +
+                            "                                    </figure>\n" +
+                            "                                    <div>\n" +
+                            "                                        <h5>" + item.senderId + "</h5>\n" +
+                            "                                        <div class=\"time\">" + format(item.timestamp) + "<i class=\"ti-double-check text-info\"></i></div>\n" +
+                            "                                    </div>\n" +
+                            "                                </div>\n" +
+                            "                                <div class=\"message-wrap\">" + item.payload.text +
+                            "                                </div>\n" +
+                            "                            </div>"
+                        $("#messages-list").append(messageBubble)
+                    }
+                })
+            },
+            onFailed: function (error) { //获取失败
+                console.log("Failed to query group message, code:" + error.code + " content:" + error.content);
+            },
+        });
+        $("#messages-list").html("");
+
+    })
 
     // 文件上传模块
     //TODO:用阿里云OSS去了，已经在goeasy里配好了，现在需要写一个文件上传按钮，然后把对应的函数放进去就可以了
@@ -787,6 +914,28 @@
             }
         });
     })
+
+    // 用户信息修改模块
+    // TODO:个人信息还没写完，其他都完了
+    $("#saveNewUserInfo").click(function () {
+        const newUserName = $("#newUserName").text();
+        const newUserEmail = $("#newUserEmail").text();
+        const newUserMotto = $("#newUserMotto").text();
+        const newUserInfo = JSON.stringify({newUserName, newUserEmail, newUserMotto});
+        $.ajax({
+            url: requestUrl + "/" + localStorage.getItem("userId"),
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                chattoken: localStorage.getItem("chattoken")
+            },
+            data: newUserInfo,
+            onSuccess: function (result) {
+                console.log(result.status);
+            }
+        })
+    })
+
 
 </script>
 
